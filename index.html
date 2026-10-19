@@ -19,7 +19,7 @@
   <div class="summary-box">
     <div class="stat-card">
       <h4>Target Total Biaya Vila</h4>
-      <input type="number" id="target-biaya" value="1500000" style="text-align: center; font-weight: bold; font-size: 16px; margin-top: 5px;" oninput="hitungSisa()">
+      <input type="number" id="target-biaya" style="text-align: center; font-weight: bold; font-size: 16px; margin-top: 5px;" oninput="hitungSisa()">
     </div>
     <div class="stat-card">
       <h4>Total Terkumpul</h4>
@@ -36,15 +36,15 @@
     <h3 id="form-title">Tambah Data Patungan Peserta</h3>
     <form id="form-patungan">
       <input type="hidden" id="patungan-id">
-      <div class="form-group"><label>Nama Lu Anjing:</label><input type="text" id="nama" placeholder="Nama teman..." required></div>
-      <div class="form-group"><label>Ikut apa kaga anjing:</label>
+      <div class="form-group"><label>Nama Peserta:</label><input type="text" id="nama" placeholder="Nama teman..." required></div>
+      <div class="form-group"><label>Status Keikutsertaan:</label>
         <select id="status-ikut">
           <option value="Udah Yakin / Pasti Ikut">Udah Yakin / Pasti Ikut</option>
           <option value="Masih Ragu-ragu">Masih Ragu-ragu</option>
           <option value="Wacana Doang">Wacana Doang</option>
         </select>
       </div>
-      <div class="form-group"><label>Isi List mok (Rp):</label><input type="number" id="jumlah" value="0" min="0" required></div>
+      <div class="form-group"><label>Jumlah Uang yang Sudah Disetor (Rp):</label><input type="number" id="jumlah" value="0" min="0" required></div>
       <button type="submit" id="submit-btn">Simpan Data</button>
       <button type="button" id="cancel-btn" style="display:none; background:#6b7280; margin-left: 10px;">Batal Edit</button>
     </form>
@@ -62,6 +62,10 @@
   </div>
 
   <script>
+    // --- ATUR TARGET BIAYA AWAL DI SINI (JIKA BELUM DIBUAT/DIUBAH) ---
+    const TARGET_AWAL = 2000000; // Ubah nominal ini sesuai kebutuhan lu
+    // -----------------------------------------------------------------
+
     const form = document.getElementById('form-patungan');
     const idInput = document.getElementById('patungan-id');
     const namaInput = document.getElementById('nama');
@@ -74,6 +78,10 @@
     const cancelBtn = document.getElementById('cancel-btn');
 
     let globalDataPeserta = [];
+
+    // Ambil target tersimpan di browser, jika belum ada pakai TARGET_AWAL
+    const savedTarget = localStorage.getItem('target_biaya_vila');
+    targetInput.value = savedTarget ? savedTarget : TARGET_AWAL;
 
     async function loadPatungan() {
       const { data, error } = await db.from('patungan_vila').select('*').order('id', { ascending: false });
@@ -108,8 +116,11 @@
 
     function hitungSisa() {
       const target = parseInt(targetInput.value) || 0;
-      let totalTerkumpul = 0;
+      
+      // Simpan perubahan target ke localStorage browser biar gak ke-reset pas reload
+      localStorage.setItem('target_biaya_vila', target);
 
+      let totalTerkumpul = 0;
       globalDataPeserta.forEach(p => {
         totalTerkumpul += p.jumlah_patungan;
       });
