@@ -1,0 +1,101 @@
+/* Reset & Styling Dasar */
+* { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { max-width: 1000px; margin: 0 auto; padding: 15px; background: #f4f6f9; color: #333; }
+
+/* Navbar */
+nav { 
+  background: #10b981; 
+  padding: 12px 15px; 
+  border-radius: 8px; 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+  margin-bottom: 20px; 
+  flex-wrap: wrap; 
+}
+nav a { 
+  color: white; 
+  text-decoration: none; 
+  font-weight: bold; 
+  padding: 8px 12px; 
+  border-radius: 4px; 
+  transition: 0.2s; 
+  font-size: 14px;
+}
+nav a:hover, nav a.active { background: rgba(255, 255, 255, 0.2); }
+nav .brand { font-size: 16px; font-weight: bold; margin-right: auto; color: white; }
+
+/* Summary Stats / Ringkasan */
+.summary-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.stat-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+.stat-card h4 { margin: 0 0 5px 0; color: #6b7280; font-size: 13px; }
+.stat-card p { margin: 0; font-size: 20px; font-weight: bold; color: #10b981; }
+.stat-card p.minus { color: #ef4444; }
+
+/* Card & Form */
+.card { 
+  background: white; 
+  padding: 15px 20px; 
+  border-radius: 8px; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+  margin-bottom: 20px; 
+}
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px; color: #374151; }
+input, select, textarea { 
+  width: 100%; 
+  padding: 10px; 
+  border: 1px solid #d1d5db; 
+  border-radius: 6px; 
+  font-size: 14px; 
+  background: #fff;
+}
+
+/* Tombol-tombol */
+button { 
+  background: #10b981; 
+  color: white; 
+  border: none; 
+  padding: 10px 16px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-weight: bold; 
+  font-size: 14px;
+  transition: background 0.2s;
+}
+button:hover { background: #059669; }
+button.btn-warning { background: #f59e0b; }
+button.btn-warning:hover { background: #d97706; }
+button.btn-danger { background: #ef4444; }
+button.btn-danger:hover { background: #dc2626; }
+
+/* Tabel Responsif */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 10px; 
+  font-size: 13px; 
+  min-width: 500px;
+}
+th, td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+th { background-color: #f8fafc; color: #4b5563; font-weight: 600; }
+
+.badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+.badge-lunas { background: #d1fae5; color: #065f46; }
+.badge-belum { background: #fee2e2; color: #991b1b; }
+
+/* Responsive Mobile */
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  nav { justify-content: center; }
+  nav .brand { width: 100%; text-align: center; margin-bottom: 5px; }
+  nav a { flex: 1; text-align: center; padding: 6px 8px; font-size: 12px; }
+  .card { padding: 12px; }
+  button { width: 100%; margin-bottom: 5px; }
+  button#cancel-btn { margin-left: 0 !important; }
+}
