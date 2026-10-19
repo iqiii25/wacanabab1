@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Patungan Vila</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    .summary-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; }
+    .stat-card h4 { margin: 0 0 5px 0; color: #6b7280; font-size: 13px; }
+    .stat-card p { margin: 0; font-size: 20px; font-weight: bold; color: #10b981; }
+    .stat-card p.minus { color: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="brand">🏡 Patungan Vila</span>
+    <a href="vila.html" class="active">Dashboard Patungan</a>
+  </nav>
+
+  <!-- KOTAK INFORMASI TARGET & SISA -->
+  <div class="summary-box">
+    <div class="stat-card">
+      <h4>Target Total Biaya Vila</h4>
+      <input type="number" id="target-biaya" value="1500000" style="text-align: center; font-weight: bold; font-size: 16px; margin-top: 5px;" oninput="hitungSisa()">
+    </div>
+    <div class="stat-card">
+      <h4>Total Terkumpul</h4>
+      <p id="total-terkumpul">Rp 0</p>
+    </div>
+    <div class="stat-card">
+      <h4>Sisa Kurang Biaya</h4>
+      <p id="sisa-kurang" class="minus">Rp 0</p>
+    </div>
+  </div>
+
+  <!-- FORM TAMBAH / EDIT PESERTA -->
+  <div class="card">
+    <h3 id="form-title">Tambah Data Patungan Peserta</h3>
+    <form id="form-patungan">
+      <input type="hidden" id="patungan-id">
+      <div class="form-group"><label>Nama Peserta:</label><input type="text" id="nama" placeholder="Nama teman..." required></div>
+      <div class="form-group"><label>Status Keikutsertaan:</label>
+        <select id="status-ikut">
+          <option value="Udah Yakin / Pasti Ikut">Udah Yakin / Pasti Ikut</option>
+          <option value="Masih Ragu-ragu">Masih Ragu-ragu</option>
+          <option value="Wacana Doang">Wacana Doang</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Jumlah Uang yang Sudah Disetor (Rp):</label><input type="number" id="jumlah" value="0" min="0" required></div>
+      <button type="submit" id="submit-btn">Simpan Data</button>
+      <button type="button" id="cancel-btn" style="display:none; background:#6b7280; margin-left: 10px;">Batal Edit</button>
+    </form>
+  </div>
+
+  <!-- TABEL DAFTAR PESERTA -->
+  <div class="card">
+    <h3>Daftar Patungan Teman-Teman</h3>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>Nama</th><th>Status</th><th>Sudah Bayar</th><th>Aksi</th></tr></thead>
+        <tbody id="list-patungan"><tr><td colspan="4">Memuat data...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form-patungan');
+    const idInput = document.getElementById('patungan-id');
+    const namaInput = document.getElementById('nama');
+    const statusInput = document.getElementById('status-ikut');
+    const jumlahInput = document.getElementById('jumlah');
+    const targetInput = document.getElementById('target-biaya');
+    
+    const formTitle = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submit-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    let globalDataPeserta = [];
+
+    async function loadPatungan() {
+      const { data, error } = await db.from('patungan_vila').select('*').order('id', { ascending: false });
+      const tbody = document.getElementById('list-patungan');
+      tbody.innerHTML = "";
+
+      if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Error: ${error.message}</td></tr>`; return; }
+      if (!data || data.length === 0) { 
+        tbody.innerHTML = `<tr><td colspan="4">Belum ada peserta terdaftar.</td></tr>`; 
+        globalDataPeserta = [];
+        hitungSisa();
+        return; 
+      }
+
+      globalDataPeserta = data;
+      data.forEach(p => {
+        let badgeColor = p.status_ikut.includes('Yakin') ? 'badge-lunas' : 'badge-belum';
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.nama}</strong></td>
+            <td><span class="badge ${badgeColor}">${p.status_ikut}</span></td>
+            <td>Rp ${p.jumlah_patungan.toLocaleString()}</td>
+            <td>
+              <button class="btn-warning" style="padding:4px 8px;" onclick="setupEdit(${p.id}, '${p.nama}', '${p.status_ikut}', ${p.jumlah_patungan})">Edit</button>
+              <button class="btn-danger" style="padding:4px 8px;" onclick="hapus(${p.id})">Hapus</button>
+            </td>
+          </tr>`;
+      });
+
+      hitungSisa();
+    }
+
+    function hitungSisa() {
+      const target = parseInt(targetInput.value) || 0;
+      let totalTerkumpul = 0;
+
+      globalDataPeserta.forEach(p => {
+        totalTerkumpul += p.jumlah_patungan;
+      });
+
+      const sisaKurang = target - totalTerkumpul;
+
+      document.getElementById('total-terkumpul').innerText = `Rp ${totalTerkumpul.toLocaleString()}`;
+      const sisaEl = document.getElementById('sisa-kurang');
+      sisaEl.innerText = `Rp ${sisaKurang.toLocaleString()}`;
+      
+      if (sisaKurang <= 0) {
+        sisaEl.innerText = "LUNAS / TARGET TERCAPAI! 🎉";
+        sisaEl.style.color = "#10b981";
+      } else {
+        sisaEl.style.color = "#ef4444";
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = idInput.value;
+      const nama = namaInput.value.trim();
+      const status_ikut = statusInput.value;
+      const jumlah_patungan = parseInt(jumlahInput.value);
+
+      if (id) {
+        const { error } = await db.from('patungan_vila').update({ nama, status_ikut, jumlah_patungan }).eq('id', id);
+        if (error) alert("Gagal update: " + error.message);
+        else resetForm();
+      } else {
+        const { error } = await db.from('patungan_vila').insert([{ nama, status_ikut, jumlah_patungan }]);
+        if (error) alert("Gagal simpan: " + error.message);
+        else resetForm();
+      }
+      loadPatungan();
+    });
+
+    function setupEdit(id, nama, status, jumlah) {
+      idInput.value = id;
+      namaInput.value = nama;
+      statusInput.value = status;
+      jumlahInput.value = jumlah;
+      formTitle.innerText = "Edit Data Patungan";
+      submitBtn.innerText = "Update Data";
+      cancelBtn.style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      idInput.value = "";
+      form.reset();
+      formTitle.innerText = "Tambah Data Patungan Peserta";
+      submitBtn.innerText = "Simpan Data";
+      cancelBtn.style.display = "none";
+    }
+
+    cancelBtn.addEventListener('click', resetForm);
+
+    async function hapus(id) {
+      if(confirm("Hapus data peserta ini?")) {
+        await db.from('patungan_vila').delete().eq('id', id);
+        loadPatungan();
+      }
+    }
+
+    loadPatungan();
+  </script>
+</body>
+</html>
