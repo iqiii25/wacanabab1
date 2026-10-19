@@ -62,9 +62,9 @@
   </div>
 
   <script>
-    // --- ATUR TARGET BIAYA AWAL DI SINI (JIKA BELUM DIBUAT/DIUBAH) ---
-    const TARGET_AWAL = 50000000; // Ubah nominal ini sesuai kebutuhan lu
-    // -----------------------------------------------------------------
+    // --- ATUR TARGET BIAYA AWAL DI SINI ---
+    const TARGET_AWAL = 50000000; // Rp 50.000.000
+    // -------------------------------------
 
     const form = document.getElementById('form-patungan');
     const idInput = document.getElementById('patungan-id');
@@ -79,9 +79,8 @@
 
     let globalDataPeserta = [];
 
-    // Ambil target tersimpan di browser, jika belum ada pakai TARGET_AWAL
-    const savedTarget = localStorage.getItem('target_biaya_vila');
-    targetInput.value = savedTarget ? savedTarget : TARGET_AWAL;
+    // Menggunakan TARGET_AWAL langsung dari kodingan agar tidak tertimpa cache lama
+    targetInput.value = TARGET_AWAL;
 
     async function loadPatungan() {
       const { data, error } = await db.from('patungan_vila').select('*').order('id', { ascending: false });
@@ -116,9 +115,6 @@
 
     function hitungSisa() {
       const target = parseInt(targetInput.value) || 0;
-      
-      // Simpan perubahan target ke localStorage browser biar gak ke-reset pas reload
-      localStorage.setItem('target_biaya_vila', target);
 
       let totalTerkumpul = 0;
       globalDataPeserta.forEach(p => {
